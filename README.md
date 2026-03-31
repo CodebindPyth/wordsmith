@@ -9,7 +9,7 @@ Synthetic data generator for emails, passwords, and phone numbers.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/python-3.10-blue"/>
+  <img src="https://img.shields.io/badge/python-3.14.3-blue"/>
   <img src="https://img.shields.io/badge/status-active-success"/>
   <img src="https://img.shields.io/badge/license-MIT-green"/>
 </p>
