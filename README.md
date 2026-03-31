@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="![wordsmith_logo](https://github.com/user-attachments/assets/379e5bbd-aa24-45fc-ab65-8526f8b767d5)
+  <img src="https://github.com/user-attachments/assets/379e5bbd-aa24-45fc-ab65-8526f8b767d5")
 " />
 </p>
 
