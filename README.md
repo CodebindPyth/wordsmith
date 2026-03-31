@@ -57,6 +57,17 @@ All generated data is **random and fictional**.
 - 💾 Export-ready output  
 
 ---
+## 🔐 Security & Penetration Testing Use
+
+Wordsmith can be used by security professionals and penetration testers for:
+
+- Testing input validation systems  
+- Generating dummy credentials for login forms  
+- Simulating user data in controlled environments  
+- Stress testing authentication systems  
+
+⚠️ This tool must only be used in authorized environments and with proper permission.
+---
 
 ## 🛠 Installation
 
