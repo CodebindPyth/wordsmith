@@ -1,5 +1,6 @@
 <p align="center">
-  <img src="https://via.placeholder.com/1200x300.png?text=WORDSMITH+TOOL" />
+  <img src="![wordsmith_logo](https://github.com/user-attachments/assets/379e5bbd-aa24-45fc-ab65-8526f8b767d5)
+" />
 </p>
 
 <h1 align="center">Wordsmith</h1>
