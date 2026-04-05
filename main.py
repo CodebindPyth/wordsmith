@@ -3,6 +3,9 @@ import os, sys, time
 import string
 import itertools
 import random
+import re
+import hashlib
+import requests
 from itertools import permutations
 from turtle import color
 from phonenumbers import carrier
@@ -52,11 +55,12 @@ print(Colorate.Horizontal(Colors.green_to_yellow, Center.XCenter(banner)))
 
 
 option = 6
-while (option != "4"):
+while (option != "5"):
     print("                                                                                  1.generate a random password")
     print("                                                                                    2.generate a random email")
     print("                                                                                 3.generate a random phone number")
-    print("                                                                                               4.exit")
+    print("                                                                                 4.validate phone/email or check HIBP")
+    print("                                                                                               5.exit")
     option = input("                                                                                    give option: ")
 
     if option == "1":
@@ -115,14 +119,20 @@ while (option != "4"):
         vowels = set("aeiouAEIOU" "αεηιουωΑΕΗΙΟΥΩ")
         def no_vowels(word):
             return ''.join(c for c in word if c not in vowels)
+        def only_vowels(word):
+            return ''.join(c for c in word if c in vowels)
+        def only_consonants(word):
+            return ''.join(c for c in word if c not in vowels and c.isalpha())
 #custom seperators
-        separators   = [".", "_", "-", "!", "@", "#", "$"]
+        separators   = [".", "_", "-", "!", "@", "#", "$", "%", "^", "&", "*", "+", "=", "|", "~", ":"]
         common_suffixes = ["123","1234","12345","!","!!","123!","1!","@1","321",
-                           "111","000","007","69","99","2024","2023","01","1"]
+                           "111","000","007","69","99","2024","2023","01","1","!@","@!","!#","@#","$%"]
         keyboard_patterns = ["qwerty","123456","password","qwerty123","abc123","letmein","welcome"]
         months_en = ["january","february","march","april","may","june",
                      "july","august","september","october","november","december"]
-        separator_numbers = ["1","12","123","1234","2024","2023","007","69","99","321","01"]
+        separator_numbers = ["1","12","123","1234","2024","2023","007","69","99","321","01","55","77","88","99","55555"]
+        special_chars = ["!", "@", "#", "$", "%", "^", "&", "*", "+", "="]
+        extended_keyboard = ["qwerty","123456","password","qwerty123","abc123","letmein","welcome","admin","root","user","test","123123","111111","000000"]
 
         initial      = nameTarget[0]
         last_initial = lastnameTarget[0]
@@ -405,10 +415,331 @@ while (option != "4"):
             add_combo(lastnameTarget + phoneTarget[-4:])
             add_combo(phoneTarget[-4:] + nameTarget)
             add_combo(phoneTarget[:4] + nameTarget)
+            for sep in separators:
+                add_combo(f"{nameTarget}{sep}{phoneTarget[-4:]}")
+                add_combo(f"{lastnameTarget}{sep}{phoneTarget[-4:]}")
+                add_combo(f"{phoneTarget[-4:]}{sep}{nameTarget}")
+
+        for field in all_fields:
+            if field and len(field) > 1:
+                add_combo(only_consonants(field))
+                add_combo(only_vowels(field))
+                add_combo(no_vowels(field))
+                add_combo(leet(field))
+                add_combo(altcaps(field))
+                add_combo(field + no_vowels(field))
+                add_combo(no_vowels(field) + field)
+                add_combo(leet(field)[::-1])
+                add_combo(altcaps(field)[::-1])
+
+        for l_field in [nameTarget, lastnameTarget, keywordTarget]:
+            if l_field:
+                for r_field in [petTarget, partnerTarget, kidsTarget]:
+                    if r_field:
+                        for sep in separators[:8]:
+                            for num in separator_numbers[:8]:
+                                add_combo(f"{l_field}{sep}{r_field}{sep}{num}")
+                                add_combo(f"{num}{sep}{l_field}{sep}{r_field}")
+                                add_combo(f"{leet(l_field)}{sep}{r_field}{sep}{num}")
+                                add_combo(f"{l_field}{sep}{leet(r_field)}{sep}{num}")
+
+        for field in all_fields:
+            if field:
+                for i in range(10):
+                    add_combo(field + str(i) * 2)
+                    add_combo(field + str(i) * 3)
+                    add_combo(str(i) * 2 + field)
+                    add_combo(str(i) * 3 + field)
+                    add_combo(field[0] + str(i) * (len(field)-1) + field[-1:] if len(field) > 1 else field)
+
+        for combo_base in [nameTarget + lastnameTarget, lastnameTarget + nameTarget]:
+            add_combo(leet(combo_base))
+            add_combo(altcaps(combo_base))
+            add_combo(no_vowels(combo_base))
+            add_combo(only_consonants(combo_base))
+            for sep in separators:
+                add_combo(leet(nameTarget) + sep + leet(lastnameTarget))
+                add_combo(altcaps(nameTarget) + sep + altcaps(lastnameTarget))
+
+        for sp in special_chars:
+            for num in separator_numbers:
+                for field in [nameTarget, lastnameTarget, keywordTarget]:
+                    if field:
+                        add_combo(field + sp + field[::-1] + sp + num)
+                        add_combo(num + sp + field + sp + field.upper())
+                        add_combo(leet(field) + sp + num + sp + altcaps(field))
+                        add_combo(altcaps(field) + sp + leet(field) + sp + num)
+
+        for i in range(1, min(range1, 100)):
+            add_combo(nameTarget + str(i).zfill(2))
+            add_combo(nameTarget + str(i).zfill(3))
+            add_combo(nameTarget + str(i).zfill(4))
+            add_combo(lastnameTarget + str(i).zfill(2))
+            add_combo(lastnameTarget + str(i).zfill(3))
+
+        if bday in ("Y", "y"):
+            month_word = months_en[int(monthTarget) - 1]
+            for a, b in [(nameTarget, dayTarget), (dayTarget, nameTarget), (nameTarget, monthTarget), (monthTarget, nameTarget)]:
+                if a and b:
+                    for sep in separators[:8]:
+                        for suffix in common_suffixes[:8]:
+                            add_combo(f"{a}{sep}{b}{suffix}")
+                            add_combo(f"{suffix}{a}{sep}{b}")
+                            add_combo(f"{leet(a)}{sep}{b}{suffix}")
+
+        for a, b, c in [(nameTarget, lastnameTarget, keywordTarget),
+                        (nameTarget, keywordTarget, lastnameTarget),
+                        (keywordTarget, nameTarget, lastnameTarget),
+                        (nameTarget, petTarget, lastnameTarget),
+                        (lastnameTarget, partnerTarget, nameTarget)]:
+            if a and b and c:
+                for sep in separators[:5]:
+                    add_combo(f"{leet(a)}{sep}{altcaps(b)}{sep}{no_vowels(c)}")
+                    add_combo(f"{altcaps(a)}{sep}{leet(b)}{sep}{altcaps(c)}")
+                    add_combo(f"{no_vowels(a)}{sep}{b}{sep}{leet(c)}")
+                    add_combo(f"{a}{sep}{b}{sep}{c}")
+                    add_combo(f"{c}{sep}{b}{sep}{a}")
+
+        for field in all_fields:
+            if field and len(field) >= 3:
+                half = len(field) // 2
+                add_combo(field[:half] + leet(field[half:]))
+                add_combo(altcaps(field[:half]) + field[half:])
+                add_combo(field[:half] + field[half:].upper())
+                add_combo(leet(field[:half]) + no_vowels(field[half:]))
+                for num in separator_numbers[:5]:
+                    add_combo(field[:half] + num + field[half:])
+                    add_combo(num + field[:half:] + field[half:])
+
+        for item in all_fields:
+            if item:
+                for sp in special_chars:
+                    add_combo(item + sp)
+                    add_combo(sp + item)
+                    add_combo(item[0] + sp + item)
+                    add_combo(item + sp + item[0])
+                    for num in separator_numbers[-3:]:
+                        add_combo(f"{item}{sp}{num}")
+                        add_combo(f"{num}{sp}{item}")
+
+        for field in all_fields:
+            if field:
+                add_combo(field.upper())
+                add_combo(field.lower())
+                add_combo(field.capitalize() * 2)
+                add_combo(field[0].upper() + field[1:].lower())
+                add_combo(field[0].lower() + field[1:].upper())
+                if len(field) > 2:
+                    add_combo(field[0] + field[-1] + field[1:-1])
+                    add_combo(field[-1] + field[:-1])
+                    add_combo(field[1:] + field[0])
+                    for idx in range(len(field)):
+                        if idx > 0 and idx < len(field) - 1:
+                            add_combo(field[:idx] + field[idx:].upper())
+                            add_combo(field[:idx].upper() + field[idx:])
+
+        for kb_pattern in keyboard_patterns:
+            for field in [nameTarget, lastnameTarget, keywordTarget, petTarget]:
+                if field:
+                    add_combo(field + kb_pattern)
+                    add_combo(kb_pattern + field)
+                    add_combo(leet(field) + kb_pattern)
+                    add_combo(kb_pattern + leet(field))
+                    add_combo(field + kb_pattern + field)
+                    for sep in separators[:4]:
+                        add_combo(f"{field}{sep}{kb_pattern}")
+                        add_combo(f"{kb_pattern}{sep}{field}")
+
+        for a, b, c, d in [(nameTarget, lastnameTarget, keywordTarget, petTarget),
+                           (nameTarget, keywordTarget, partnerTarget, lastnameTarget),
+                           (lastnameTarget, nameTarget, kidsTarget, jobTarget)]:
+            if a and b and c and d:
+                for sep1, sep2, sep3 in [(separators[i], separators[j], separators[k]) for i in range(min(3, len(separators))) for j in range(min(3, len(separators))) for k in range(min(3, len(separators)))]:
+                    add_combo(f"{leet(a)}{sep1}{altcaps(b)}{sep2}{no_vowels(c)}{sep3}{d}")
+                    add_combo(f"{a}{sep1}{b}{sep2}{c}{sep3}{d}")
+                    add_combo(f"{d}{sep3}{c}{sep2}{b}{sep1}{a}")
+
+        for field in all_fields:
+            if field:
+                for num in separator_numbers:
+                    add_combo(field + num)
+                    add_combo(num + field)
+                    add_combo(field + num + field)
+                    add_combo(num + field + num)
+                    add_combo(leet(field) + num)
+                    add_combo(num + leet(field))
+                    for ch in special_chars:
+                        add_combo(f"{field}{ch}{num}")
+                        add_combo(f"{num}{ch}{field}")
+                        add_combo(f"{field}{ch}{num}{ch}{field}")
+
+        for field1 in all_fields:
+            for field2 in all_fields:
+                if field1 and field2 and field1 != field2:
+                    add_combo(field1.upper() + field2.lower())
+                    add_combo(field1.lower() + field2.upper())
+                    add_combo(leet(field1) + field2)
+                    add_combo(field1 + leet(field2))
+                    add_combo(field1 + field2 + field1)
+                    add_combo(field2 + field1 + field2)
+                    add_combo(field1[::-1] + field2)
+                    add_combo(field1 + field2[::-1])
+                    add_combo(field1[::-1] + field2[::-1])
+                    for num in ["2024", "2023", "2025", "2026"]:
+                        add_combo(field1 + num + field2)
+                        add_combo(field2 + num + field1)
+
+        for field in all_fields:
+            if field and len(field) > 2:
+                for i in range(len(field)):
+                    for j in range(i+1, len(field)+1):
+                        add_combo(field[i:j])
+                        add_combo(field[i:j] + nameTarget)
+                        add_combo(nameTarget + field[i:j])
+                        if len(field[i:j]) > 1:
+                            add_combo(leet(field[i:j]))
+                            add_combo(altcaps(field[i:j]))
+
+        for bracket_pair in [("(", ")"), ("{", "}"), ("[", "]"), ("<", ">"), ("'", "'"), ('"', '"')]:
+            for field in [nameTarget, lastnameTarget, keywordTarget]:
+                if field:
+                    add_combo(f"{bracket_pair[0]}{field}{bracket_pair[1]}")
+                    add_combo(f"{bracket_pair[0]}{field.upper()}{bracket_pair[1]}")
+                    add_combo(f"{bracket_pair[0]}{leet(field)}{bracket_pair[1]}")
+                    for num in separator_numbers[:5]:
+                        add_combo(f"{bracket_pair[0]}{field}{num}{bracket_pair[1]}")
+
+        for mul in range(2, 4):
+            for field in all_fields:
+                if field:
+                    add_combo(field * mul)
+                    add_combo((field[0] * mul) + field[1:] if len(field) > 1 else field)
+                    add_combo(field + (field[-1] * (mul-1)))
+                    for num in separator_numbers[:3]:
+                        add_combo((field + num) * mul)
+
+        if bday in ("Y", "y"):
+            month_word = months_en[int(monthTarget) - 1]
+            for perm in permutations([dayTarget, monthTarget, yearTarget[:2], nameTarget, lastnameTarget], 2):
+                if perm[0] and perm[1]:
+                    for sep in separators[:6]:
+                        add_combo(f"{perm[0]}{sep}{perm[1]}")
+                        add_combo(f"{leet(perm[0]) if perm[0] != monthTarget else perm[0]}{sep}{perm[1]}")
+
+        if field:
+                for y in range(1960, 2026):
+                    add_combo(field + str(y))
+                    add_combo(str(y) + field)
+                    for month in range(1, 13):
+                        add_combo(field + str(month).zfill(2) + str(y % 100))
+                        add_combo(str(month).zfill(2) + field + str(y % 100))
+
+        for field in all_fields:
+            if field:
+                for i in range(1000):
+                    if i % 100 == 0:
+                        add_combo(field + str(i))
+                        add_combo(str(i) + field)
+                        add_combo(field + str(i).zfill(4))
+                        add_combo(str(i).zfill(4) + field)
+
+        for sp in special_chars:
+            for field1 in all_fields:
+                for field2 in all_fields:
+                    if field1 and field2:
+                        add_combo(f"{leet(field1)}{sp}{altcaps(field2)}")
+                        add_combo(f"{altcaps(field1)}{sp}{no_vowels(field2)}")
+                        add_combo(f"{no_vowels(field1)}{sp}{leet(field2)}")
+                        add_combo(f"{field1[::-1]}{sp}{field2[::-1]}")
+                        add_combo(f"{field1.upper()}{sp}{field2.lower()}")
+
+        for kb in extended_keyboard:
+            for field in all_fields:
+                if field:
+                    add_combo(leet(kb) + field)
+                    add_combo(field + leet(kb))
+                    add_combo(altcaps(kb) + field)
+                    add_combo(field + altcaps(kb))
+                    add_combo(field + kb + field)
+                    add_combo(kb + leet(field) + kb)
+
+        for field in all_fields:
+            if field and len(field) > 2:
+                for i in range(len(field)):
+                    for j in range(i+2, len(field)+1):
+                        sub = field[i:j]
+                        if len(sub) > 1:
+                            add_combo(leet(sub) + nameTarget)
+                            add_combo(sub + leet(nameTarget))
+                            add_combo(altcaps(sub) + lastnameTarget)
+                            add_combo(no_vowels(sub) + keywordTarget if keywordTarget else nameTarget)
+                            for num in separator_numbers:
+                                add_combo(sub + num)
+
+        all_field_pairs = [(a, b) for a in all_fields for b in all_fields if a and b]
+        for (f1, f2) in all_field_pairs[:50]:
+            for sep in separators:
+                add_combo(f"{leet(f1)}{sep}{leet(f2)}")
+                add_combo(f"{altcaps(f1)}{sep}{altcaps(f2)}")
+                add_combo(f"{f1.upper()}{sep}{f2.lower()}")
+                add_combo(f"{no_vowels(f1)}{sep}{no_vowels(f2)}")
+                for num in separator_numbers[:5]:
+                    add_combo(f"{f1}{sep}{f2}{sep}{num}")
+                    add_combo(f"{leet(f1)}{sep}{f2}{sep}{leet(num)}")
+
+        for field in all_fields:
+            if field:
+                for sp1 in special_chars:
+                    for sp2 in special_chars:
+                        add_combo(f"{sp1}{field}{sp2}")
+                        add_combo(f"{sp1}{leet(field)}{sp2}")
+                        add_combo(f"{sp1}{altcaps(field)}{sp2}")
+                        add_combo(f"{sp1}{no_vowels(field)}{sp2}")
+                        add_combo(f"{sp1}{field}{sp1}{field}{sp2}")
+
+        for i in range(2, 6):
+            for field in all_fields:
+                if field:
+                    repeated = field * i
+                    add_combo(repeated)
+                    add_combo(leet(field) * i)
+                    add_combo(altcaps(field) * i)
+                    add_combo((field[0] * 2) + field[1:] if len(field) > 1 else field)
+                    add_combo(field + (field[-1] * (i-1)))
+                    add_combo((field[0] * i) + field if len(field) > 1 else field)
+
+        for triples in [(nameTarget, lastnameTarget, keywordTarget),
+                        (keywordTarget, nameTarget, petTarget),
+                        (partnerTarget, lastnameTarget, nameTarget),
+                        (nameTarget, petTarget, kidsTarget),
+                        (lastnameTarget, keywordTarget, jobTarget)]:
+            if all(triples):
+                for i in range(len(separators)):
+                    for j in range(len(separators)):
+                        sep1 = separators[i]
+                        sep2 = separators[j]
+                        add_combo(f"{leet(triples[0])}{sep1}{altcaps(triples[1])}{sep2}{no_vowels(triples[2])}")
+                        add_combo(f"{triples[0]}{sep1}{triples[1]}{sep2}{triples[2]}")
+                        add_combo(f"{triples[2]}{sep2}{triples[1]}{sep1}{triples[0]}")
+                        add_combo(f"{altcaps(triples[0])}{sep1}{no_vowels(triples[1])}{sep2}{leet(triples[2])}")
+
+        for field in all_fields:
+            if field:
+                for y_val in ["2024", "2023", "2022", "2021", "2020", "2019"]:
+                    for m_val in ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]:
+                        for d_val in ["01", "15", "30"]:
+                            add_combo(field + d_val + m_val + y_val)
+                            add_combo(d_val + m_val + y_val + field)
+                            add_combo(y_val + m_val + d_val + field)
+                            add_combo(field + y_val[-2:] + m_val + d_val)
 
         with open("passwords.txt", "w") as f:
             for combo in sorted(combos):
                 f.write(combo + "\n")
+
+
+
+
 
         
         print("removing duplicates...")
@@ -450,3 +781,89 @@ while (option != "4"):
                     f.write(f"{countryCode}{number}\n")
         else: 
             print("unsupported country code")
+    elif option == "4":
+        def is_valid_email(email):
+            pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            return re.match(pattern, email) is not None
+        
+        def is_valid_phone(phone):
+            try:
+                parsed = phonenumbers.parse(phone, None)
+                return phonenumbers.is_valid_number(parsed)
+            except:
+                return False
+        
+        def check_email_hibp(email):
+            try:
+                response = requests.get(
+                    f"https://haveibeenpwned.com/api/v3/breachedaccount/{email}",
+                    headers={"User-Agent": "WordbuildPython/1.0"},
+                    timeout=5
+                )
+                if response.status_code == 200:
+                    breaches = response.json()
+                    print(f"[!] {email} has been found in {len(breaches)} breach(es):")
+                    for breach in breaches:
+                        print(f"    - {breach['Name']} ({breach['BreachDate']})")
+                    return True
+                elif response.status_code == 404:
+                    print(f"[+] {email} is CLEAN (not found in known breaches)")
+                    return False
+                else:
+                    print(f"[-] API Error: {response.status_code}")
+                    return None
+            except requests.exceptions.RequestException as e:
+                print(f"[-] Connection error: {str(e)}")
+                return None
+        
+        val_option = input("1. Validate email\n2. Validate phone\n3. Check email (HIBP)\n4. Batch validate emails (HIBP)\nChoose: ").strip()
+        
+        if val_option == "1":
+            email = input("Enter email to validate: ").strip()
+            if is_valid_email(email):
+                print(f"[+] {email} is a VALID email format")
+            else:
+                print(f"[-] {email} is NOT a valid email format")
+        
+        elif val_option == "2":
+            phone = input("Enter phone number to validate (with country code): ").strip()
+            if is_valid_phone(phone):
+                print(f"[+] {phone} is a VALID phone number")
+            else:
+                print(f"[-] {phone} is NOT a valid phone number")
+        
+        elif val_option == "3":
+            email = input("Enter email to check (HIBP): ").strip()
+            if is_valid_email(email):
+                print(f"[*] Checking {email}...")
+                check_email_hibp(email)
+            else:
+                print(f"[-] Invalid email format: {email}")
+        
+        elif val_option == "4":
+            file_path = input("Enter file path with emails (one per line): ").strip()
+            if os.path.exists(file_path):
+                with open(file_path, 'r') as f:
+                    emails = [line.strip() for line in f if line.strip()]
+                
+                print(f"[*] Checking {len(emails)} emails...")
+                pwned_count = 0
+                clean_count = 0
+                
+                for email in emails:
+                    if is_valid_email(email):
+                        result = check_email_hibp(email)
+                        if result:
+                            pwned_count += 1
+                        elif result is False:
+                            clean_count += 1
+                        time.sleep(2)
+                    else:
+                        print(f"[-] Invalid format: {email}")
+                
+                print(f"\n[*] Summary: {pwned_count} pwned, {clean_count} clean, {len(emails) - pwned_count - clean_count} errors")
+            else:
+                print(f"[-] File not found: {file_path}")
+        else:
+            print("[-] Invalid option")
+
