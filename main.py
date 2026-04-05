@@ -1,3 +1,4 @@
+
 import os, sys, time   
 import string
 import itertools
@@ -121,6 +122,7 @@ while (option != "4"):
         keyboard_patterns = ["qwerty","123456","password","qwerty123","abc123","letmein","welcome"]
         months_en = ["january","february","march","april","may","june",
                      "july","august","september","october","november","december"]
+        separator_numbers = ["1","12","123","1234","2024","2023","007","69","99","321","01"]
 
         initial      = nameTarget[0]
         last_initial = lastnameTarget[0]
@@ -129,274 +131,284 @@ while (option != "4"):
         extra_fields = [f for f in [petTarget, kidsTarget, partnerTarget,
                                      keywordTarget, jobTarget, cityTarget] if f]
 
-        with open("passwords.txt", "w") as f:
+        combos = set()
 
-           #combos for wordlist start
-            for w in [nameTarget, lastnameTarget,
-                      nameTarget+lastnameTarget, lastnameTarget+nameTarget,
-                      nameTarget.capitalize(), lastnameTarget.capitalize(),
-                      nameTarget.upper(), lastnameTarget.upper(),
-                      nameTarget.lower(), lastnameTarget.lower(),
-                      nameTarget.capitalize()+lastnameTarget.capitalize(),
-                      lastnameTarget.capitalize()+nameTarget.capitalize()]:
-                f.write(w + "\n")
+        def add_combo(value):
+            if value:
+                combos.add(value)
 
-            
+        def variants(word):
+            if not word:
+                return []
+            return [
+                word,
+                word.capitalize(),
+                word.upper(),
+                word.lower(),
+                leet(word),
+                altcaps(word),
+                no_vowels(word),
+                word[::-1],
+            ]
+
+        def add_variants(word):
+            for v in variants(word):
+                add_combo(v)
+
+        def add_pair(a, b):
+            if not a or not b:
+                return
+            add_combo(a + b)
+            add_combo(b + a)
+            add_combo(a.capitalize() + b.capitalize())
+            add_combo(b.capitalize() + a.capitalize())
             for sep in separators:
-                f.write(f"{nameTarget}{sep}{lastnameTarget}\n")
-                f.write(f"{lastnameTarget}{sep}{nameTarget}\n")
-                f.write(f"{nameTarget.capitalize()}{sep}{lastnameTarget.capitalize()}\n")
+                add_combo(f"{a}{sep}{b}")
+                add_combo(f"{b}{sep}{a}")
+                for num in separator_numbers:
+                    add_combo(f"{a}{sep}{b}{sep}{num}")
+                    add_combo(f"{a}{sep}{num}{sep}{b}")
+                    add_combo(f"{num}{sep}{a}{sep}{b}")
 
-            
-            for w in [leet(nameTarget), leet(lastnameTarget),
-                      leet(nameTarget)+leet(lastnameTarget),
-                      altcaps(nameTarget), altcaps(lastnameTarget),
-                      altcaps(nameTarget)+altcaps(lastnameTarget),
-                      partial_leet(nameTarget), partial_leet(lastnameTarget),
-                      partial_leet(nameTarget)+partial_leet(lastnameTarget),
-                      no_vowels(nameTarget), no_vowels(lastnameTarget),
-                      no_vowels(nameTarget)+no_vowels(lastnameTarget)]:
-                f.write(w + "\n")
-
-            
+        def add_field(field):
+            if not field:
+                return
+            add_variants(field)
             for suffix in common_suffixes:
-                for base in [nameTarget, lastnameTarget,
-                             nameTarget.capitalize(), lastnameTarget.capitalize(),
-                             nameTarget.upper(), lastnameTarget.upper(),
-                             nameTarget+lastnameTarget, lastnameTarget+nameTarget,
-                             leet(nameTarget), leet(lastnameTarget),
-                             altcaps(nameTarget), no_vowels(nameTarget),
-                             no_vowels(lastnameTarget),
-                             initial+lastnameTarget, initial+"."+lastnameTarget]:
-                    f.write(f"{base}{suffix}\n")
+                add_combo(field + suffix)
+                add_combo(suffix + field)
+            for num in separator_numbers:
+                add_combo(field + num)
+                add_combo(num + field)
 
-            
-            for sp in ["!", "@", "#", "$"]:
-                for num in ["1", "12", "123", "1234"]:
-                    f.write(f"{nameTarget.capitalize()}{sp}{num}\n")
-                    f.write(f"{lastnameTarget.capitalize()}{sp}{num}\n")
+        all_fields = [nameTarget, lastnameTarget] + extra_fields
+        all_fields = [f for f in all_fields if f]
 
-            
-            for i in range(range1):
-                for base in [nameTarget, lastnameTarget,
-                             nameTarget+lastnameTarget, lastnameTarget+nameTarget,
-                             nameTarget.capitalize(), lastnameTarget.capitalize(),
-                             nameTarget.upper(), nameTarget.lower(),
-                             leet(nameTarget), altcaps(nameTarget),
-                             nameTarget.capitalize()+lastnameTarget.capitalize()]:
-                    f.write(f"{base}{i}\n")
-                    f.write(f"{i}{base}\n")
-                for sep in separators:
-                    f.write(f"{nameTarget}{sep}{i}\n")
-                    f.write(f"{lastnameTarget}{sep}{i}\n")
-                    f.write(f"{nameTarget}{sep}{lastnameTarget}{sep}{i}\n")
+        for field in all_fields:
+            add_field(field)
 
-            
-            for w in [nameTarget[::-1], lastnameTarget[::-1],
-                      nameTarget[::-1]+lastnameTarget[::-1]]:
-                f.write(w + "\n")
-                for suffix in common_suffixes:
-                    f.write(f"{w}{suffix}\n")
+        add_pair(nameTarget, lastnameTarget)
+        if keywordTarget:
+            add_pair(nameTarget, keywordTarget)
+            add_pair(lastnameTarget, keywordTarget)
+        if partnerTarget:
+            add_pair(nameTarget, partnerTarget)
+            add_pair(lastnameTarget, partnerTarget)
+        if petTarget:
+            add_pair(nameTarget, petTarget)
+            add_pair(lastnameTarget, petTarget)
+        if jobTarget:
+            add_pair(nameTarget, jobTarget)
+            add_pair(lastnameTarget, jobTarget)
+        if cityTarget:
+            add_pair(nameTarget, cityTarget)
+            add_pair(lastnameTarget, cityTarget)
 
-            
-            for w in [initial+lastnameTarget, initial+"."+lastnameTarget,
-                      nameTarget+last_initial, initial+lastnameTarget.capitalize(),
-                      nameTarget[0].upper()+nameTarget[1:-1]+nameTarget[-1].upper()]:
-                f.write(w + "\n")
+        for a, b in permutations(all_fields, 2):
+            add_pair(a, b)
+            for sep in separators:
+                for num in separator_numbers:
+                    add_combo(f"{a}{sep}{b}{sep}{num}")
+                    add_combo(f"{num}{sep}{a}{sep}{b}")
+                    if keywordTarget:
+                        add_combo(f"{a}{sep}{b}{sep}{keywordTarget}")
+                        add_combo(f"{keywordTarget}{sep}{a}{sep}{b}")
 
-            
-            f.write(f"{nameTarget}{nameTarget}\n")
-            f.write(f"{lastnameTarget}{lastnameTarget}\n")
-            f.write(f"{nameTarget}{nameTarget}{lastnameTarget}\n")
-
-            
-            for pad in ["01", "001", "0001"]:
-                f.write(f"{nameTarget}{pad}\n")
-                f.write(f"{nameTarget.capitalize()}{pad}\n")
-                f.write(f"{lastnameTarget}{pad}\n")
-
-            
-            for year in range(1960, 2010):
-                f.write(f"{nameTarget}{year}\n")
-                f.write(f"{lastnameTarget}{year}\n")
-                f.write(f"{nameTarget.capitalize()}{year}\n")
-
-            
-            for pattern in keyboard_patterns:
-                for base in [nameTarget, lastnameTarget,
-                             nameTarget.capitalize(), lastnameTarget.capitalize(),
-                             nameTarget.upper(), lastnameTarget.upper()]:
-                    f.write(f"{base}{pattern}\n")
-                    f.write(f"{pattern}{base}\n")
-                f.write(f"{leet(pattern)}\n")
-                f.write(f"{nameTarget}{leet(pattern)}\n")
-
-            
-            half = len(nameTarget) // 2
-            f.write(f"{nameTarget[:half]}{lastnameTarget}\n")
-            f.write(f"{nameTarget[:half]}{lastnameTarget[:half]}\n")
-            f.write(f"{nameTarget}{lastnameTarget[:half]}\n")
-
-            
-            if petTarget:
-                for base in [petTarget, petTarget.capitalize(),
-                             nameTarget+petTarget, petTarget+nameTarget,
-                             nameTarget.capitalize()+petTarget.capitalize(),
-                             petTarget.capitalize()+nameTarget.capitalize(),
-                             leet(petTarget), altcaps(petTarget)]:
-                    f.write(base + "\n")
-                    for suffix in common_suffixes:
-                        f.write(f"{base}{suffix}\n")
-                for i in range(range1):
-                    f.write(f"{petTarget}{i}\n")
-                    f.write(f"{petTarget.capitalize()}{i}\n")
-                    f.write(f"{nameTarget}{petTarget}{i}\n")
-                for sep in separators:
-                    f.write(f"{nameTarget}{sep}{petTarget}\n")
-                    f.write(f"{lastnameTarget}{sep}{petTarget}\n")
-
-            
-            if kidsTarget:
-                for base in [kidsTarget, kidsTarget.capitalize(),
-                             nameTarget+kidsTarget, kidsTarget+nameTarget,
-                             nameTarget.capitalize()+kidsTarget.capitalize(),
-                             leet(kidsTarget), altcaps(kidsTarget)]:
-                    f.write(base + "\n")
-                    for suffix in common_suffixes:
-                        f.write(f"{base}{suffix}\n")
-                for i in range(range1):
-                    f.write(f"{kidsTarget}{i}\n")
-                    f.write(f"{kidsTarget.capitalize()}{i}\n")
-                    f.write(f"{nameTarget}{kidsTarget}{i}\n")
-
-            
-            if jobTarget:
-                for base in [jobTarget, jobTarget.capitalize(),
-                             nameTarget+jobTarget, jobTarget+nameTarget,
-                             leet(jobTarget), altcaps(jobTarget)]:
-                    f.write(base + "\n")
-                    for suffix in common_suffixes:
-                        f.write(f"{base}{suffix}\n")
-                for i in range(range1):
-                    f.write(f"{jobTarget}{i}\n")
-                    f.write(f"{jobTarget.capitalize()}{i}\n")
-                    f.write(f"{nameTarget}{jobTarget}{i}\n")
-
-            
-            if petTarget and kidsTarget:
-                f.write(f"{petTarget}{kidsTarget}\n")
-                f.write(f"{kidsTarget}{petTarget}\n")
-
-            
-            if bday in ("Y", "y"):
-                month_word = months_en[int(monthTarget) - 1]
-                bday_combos = [
-                    nameTarget+dayTarget+monthTarget+yearTarget,
-                    nameTarget+yearTarget,
-                    nameTarget+dayTarget+monthTarget,
-                    nameTarget+monthTarget+yearTarget,
-                    lastnameTarget+yearTarget,
-                    lastnameTarget+dayTarget+monthTarget,
-                    nameTarget.capitalize()+yearTarget,
-                    nameTarget.capitalize()+dayTarget+monthTarget+yearTarget,
-                    yearTarget+nameTarget,
-                    dayTarget+monthTarget+nameTarget,
-                    dayTarget+monthTarget+yearTarget,
-                    yearTarget[-2:]+nameTarget,
-                    nameTarget+yearTarget[-2:],
-                    nameTarget+month_word,
-                    nameTarget+month_word.capitalize(),
-                    nameTarget+month_word+yearTarget,
-                    nameTarget.capitalize()+month_word.capitalize()+yearTarget,
-                    nameTarget+month_word+yearTarget[-2:],
-                ]
-                for combo in bday_combos:
-                    f.write(combo + "\n")
-                for sep in separators:
-                    f.write(f"{nameTarget}{sep}{dayTarget}{monthTarget}{yearTarget}\n")
-                    f.write(f"{nameTarget}{sep}{yearTarget}\n")
-                for field in [petTarget, kidsTarget, jobTarget, partnerTarget]:
-                    if field:
-                        f.write(f"{field}{yearTarget}\n")
-                        f.write(f"{field}{dayTarget}{monthTarget}\n")
-                        f.write(f"{field}{monthTarget}{yearTarget}\n")
-
-            
-            if partnerTarget:
-                for base in [partnerTarget, partnerTarget.capitalize(),
-                             nameTarget+partnerTarget, partnerTarget+nameTarget,
-                             nameTarget.capitalize()+partnerTarget.capitalize(),
-                             partnerTarget.capitalize()+nameTarget.capitalize(),
-                             leet(partnerTarget), altcaps(partnerTarget)]:
-                    f.write(base + "\n")
-                    for suffix in common_suffixes:
-                        f.write(f"{base}{suffix}\n")
-                for i in range(range1):
-                    f.write(f"{partnerTarget}{i}\n")
-                    f.write(f"{nameTarget}{partnerTarget}{i}\n")
-                    f.write(f"{partnerTarget}{nameTarget}{i}\n")
-                for sep in separators:
-                    f.write(f"{nameTarget}{sep}{partnerTarget}\n")
-                    f.write(f"{partnerTarget}{sep}{nameTarget}\n")
-                if bday in ("Y", "y"):
-                    f.write(f"{partnerTarget}{yearTarget}\n")
-                    f.write(f"{nameTarget}{partnerTarget}{yearTarget}\n")
-
-            
-            if keywordTarget:
-                for base in [keywordTarget, keywordTarget.capitalize(),
-                             keywordTarget.upper(),
-                             nameTarget+keywordTarget, keywordTarget+nameTarget,
-                             leet(keywordTarget), altcaps(keywordTarget)]:
-                    f.write(base + "\n")
-                    for suffix in common_suffixes:
-                        f.write(f"{base}{suffix}\n")
-                for i in range(range1):
-                    f.write(f"{keywordTarget}{i}\n")
-                    f.write(f"{nameTarget}{keywordTarget}{i}\n")
-                for sep in separators:
-                    f.write(f"{nameTarget}{sep}{keywordTarget}\n")
-                    f.write(f"{keywordTarget}{sep}{nameTarget}\n")
-
-            
-            if cityTarget:
-                for base in [cityTarget, cityTarget.capitalize(),
-                             nameTarget+cityTarget, cityTarget+nameTarget,
-                             nameTarget.capitalize()+cityTarget.capitalize(),
-                             leet(cityTarget)]:
-                    f.write(base + "\n")
-                    for suffix in common_suffixes:
-                        f.write(f"{base}{suffix}\n")
-                for sep in separators:
-                    f.write(f"{nameTarget}{sep}{cityTarget}\n")
-
-            
-            if luckyTarget:
-                for base in [nameTarget, lastnameTarget,
-                             nameTarget.capitalize(), lastnameTarget.capitalize()]:
-                    f.write(f"{base}{luckyTarget}\n")
-                    f.write(f"{luckyTarget}{base}\n")
-                if petTarget:
-                    f.write(f"{petTarget}{luckyTarget}\n")
+        for sp in ["!", "@", "#", "$"]:
+            for num in ["1", "12", "123", "1234", "007", "69"]:
+                add_combo(f"{nameTarget.capitalize()}{sp}{num}")
+                add_combo(f"{lastnameTarget.capitalize()}{sp}{num}")
+                add_combo(f"{nameTarget.capitalize()}{sp}{num}{sp}{lastnameTarget}")
+                add_combo(f"{lastnameTarget.capitalize()}{sp}{num}{sp}{nameTarget}")
+                if keywordTarget:
+                    add_combo(f"{nameTarget}{sp}{keywordTarget}{sp}{num}")
+                    add_combo(f"{keywordTarget}{sp}{nameTarget}{sp}{num}")
                 if partnerTarget:
-                    f.write(f"{partnerTarget}{luckyTarget}\n")
+                    add_combo(f"{nameTarget}{sp}{partnerTarget}{sp}{num}")
+                    add_combo(f"{partnerTarget}{sp}{nameTarget}{sp}{num}")
 
-            
-            if phoneTarget:
-                f.write(f"{phoneTarget}\n")
-                f.write(f"{nameTarget}{phoneTarget}\n")
-                f.write(f"{nameTarget}{phoneTarget[-4:]}\n")
-                f.write(f"{nameTarget}{phoneTarget[-6:]}\n")
-                f.write(f"{lastnameTarget}{phoneTarget[-4:]}\n")
-                f.write(f"{phoneTarget[-4:]}{nameTarget}\n")
-                f.write(f"{phoneTarget[:4]}{nameTarget}\n")
+        for i in range(range1):
+            for field in [nameTarget, lastnameTarget, keywordTarget, partnerTarget, petTarget, kidsTarget, jobTarget, cityTarget]:
+                if field:
+                    add_combo(f"{field}{i}")
+                    add_combo(f"{i}{field}")
+            for sep in separators:
+                add_combo(f"{nameTarget}{sep}{i}")
+                add_combo(f"{lastnameTarget}{sep}{i}")
+                add_combo(f"{nameTarget}{sep}{lastnameTarget}{sep}{i}")
+                add_combo(f"{nameTarget}{sep}{i}{sep}{lastnameTarget}")
+                add_combo(f"{i}{sep}{nameTarget}{sep}{lastnameTarget}")
+                add_combo(f"{nameTarget.capitalize()}{sep}{lastnameTarget.capitalize()}{sep}{i}")
+                if keywordTarget:
+                    add_combo(f"{nameTarget}{sep}{keywordTarget}{sep}{i}")
+                    add_combo(f"{keywordTarget}{sep}{nameTarget}{sep}{i}")
+                if partnerTarget:
+                    add_combo(f"{nameTarget}{sep}{partnerTarget}{sep}{i}")
+                    add_combo(f"{partnerTarget}{sep}{nameTarget}{sep}{i}")
+                if petTarget:
+                    add_combo(f"{nameTarget}{sep}{petTarget}{sep}{i}")
+                    add_combo(f"{petTarget}{sep}{nameTarget}{sep}{i}")
 
-            
-            all_fields = [nameTarget, lastnameTarget] + extra_fields
-            for a, b in permutations(all_fields, 2):
-                f.write(f"{a.capitalize()}{b.capitalize()}\n")
-                f.write(f"{a}{b}123\n")
-                f.write(f"{a}{b}!\n")
+        add_combo(nameTarget + nameTarget)
+        add_combo(lastnameTarget + lastnameTarget)
+        add_combo(nameTarget + nameTarget + lastnameTarget)
+        add_combo(nameTarget[::-1])
+        add_combo(lastnameTarget[::-1])
+        add_combo(nameTarget[::-1] + lastnameTarget[::-1])
+        add_combo(initial + lastnameTarget)
+        add_combo(initial + "." + lastnameTarget)
+        add_combo(nameTarget + last_initial)
+        add_combo(initial + lastnameTarget.capitalize())
+        add_combo(nameTarget[0].upper() + nameTarget[1:-1] + nameTarget[-1].upper())
+
+        for pad in ["01", "001", "0001"]:
+            add_combo(nameTarget + pad)
+            add_combo(nameTarget.capitalize() + pad)
+            add_combo(lastnameTarget + pad)
+
+        for year in range(1960, 2010):
+            add_combo(nameTarget + str(year))
+            add_combo(lastnameTarget + str(year))
+            add_combo(nameTarget.capitalize() + str(year))
+
+        for pattern in keyboard_patterns:
+            for base in [nameTarget, lastnameTarget, nameTarget.capitalize(), lastnameTarget.capitalize(), nameTarget.upper(), lastnameTarget.upper()]:
+                add_combo(base + pattern)
+                add_combo(pattern + base)
+            add_combo(leet(pattern))
+            add_combo(nameTarget + leet(pattern))
+
+        half = len(nameTarget) // 2
+        add_combo(nameTarget[:half] + lastnameTarget)
+        add_combo(nameTarget[:half] + lastnameTarget[:half])
+        add_combo(nameTarget + lastnameTarget[:half])
+
+        if petTarget:
+            for base in [petTarget, petTarget.capitalize(), nameTarget + petTarget, petTarget + nameTarget, nameTarget.capitalize() + petTarget.capitalize(), petTarget.capitalize() + nameTarget.capitalize(), leet(petTarget), altcaps(petTarget)]:
+                add_combo(base)
+                for suffix in common_suffixes:
+                    add_combo(base + suffix)
+            for i in range(range1):
+                add_combo(petTarget + str(i))
+                add_combo(petTarget.capitalize() + str(i))
+                add_combo(nameTarget + petTarget + str(i))
+            for sep in separators:
+                add_combo(f"{nameTarget}{sep}{petTarget}")
+                add_combo(f"{lastnameTarget}{sep}{petTarget}")
+            add_combo(no_vowels(nameTarget) + petTarget)
+            add_combo(leet(nameTarget) + "@1")
+
+        if kidsTarget:
+            for base in [kidsTarget, kidsTarget.capitalize(), nameTarget + kidsTarget, kidsTarget + nameTarget, nameTarget.capitalize() + kidsTarget.capitalize(), leet(kidsTarget), altcaps(kidsTarget)]:
+                add_combo(base)
+                for suffix in common_suffixes:
+                    add_combo(base + suffix)
+            for i in range(range1):
+                add_combo(kidsTarget + str(i))
+                add_combo(kidsTarget.capitalize() + str(i))
+                add_combo(nameTarget + kidsTarget + str(i))
+
+        if jobTarget:
+            for base in [jobTarget, jobTarget.capitalize(), nameTarget + jobTarget, jobTarget + nameTarget, leet(jobTarget), altcaps(jobTarget)]:
+                add_combo(base)
+                for suffix in common_suffixes:
+                    add_combo(base + suffix)
+            for i in range(range1):
+                add_combo(jobTarget + str(i))
+                add_combo(jobTarget.capitalize() + str(i))
+                add_combo(nameTarget + jobTarget + str(i))
+
+        if petTarget and kidsTarget:
+            add_combo(petTarget + kidsTarget)
+            add_combo(kidsTarget + petTarget)
+
+        if bday in ("Y", "y"):
+            month_word = months_en[int(monthTarget) - 1]
+            date_values = [
+                dayTarget + monthTarget + yearTarget,
+                monthTarget + dayTarget + yearTarget,
+                yearTarget + monthTarget + dayTarget,
+                yearTarget + dayTarget + monthTarget,
+                dayTarget + month_word,
+                month_word + dayTarget,
+                month_word + yearTarget,
+                month_word.capitalize() + yearTarget,
+                yearTarget[-2:] + month_word,
+                yearTarget[-2:] + dayTarget + monthTarget,
+            ]
+            for combo in date_values:
+                add_combo(combo)
+                add_combo(nameTarget + combo)
+                add_combo(lastnameTarget + combo)
+            for sep in separators:
+                add_combo(f"{nameTarget}{sep}{dayTarget}{monthTarget}{yearTarget}")
+                add_combo(f"{nameTarget}{sep}{yearTarget}")
+            for field in [petTarget, kidsTarget, jobTarget, partnerTarget]:
+                if field:
+                    add_combo(field + yearTarget)
+                    add_combo(field + dayTarget + monthTarget)
+                    add_combo(field + monthTarget + yearTarget)
+        if bday in ("Y", "y") and partnerTarget:
+            add_combo(partnerTarget + yearTarget[-2:])
+            add_combo(partnerTarget + month_word)
+
+        if partnerTarget:
+            for base in [partnerTarget, partnerTarget.capitalize(), nameTarget + partnerTarget, partnerTarget + nameTarget, nameTarget.capitalize() + partnerTarget.capitalize(), partnerTarget.capitalize() + nameTarget.capitalize(), leet(partnerTarget), altcaps(partnerTarget)]:
+                add_combo(base)
+                for suffix in common_suffixes:
+                    add_combo(base + suffix)
+            for i in range(range1):
+                add_combo(partnerTarget + str(i))
+                add_combo(nameTarget + partnerTarget + str(i))
+                add_combo(partnerTarget + nameTarget + str(i))
+            for sep in separators:
+                add_combo(f"{nameTarget}{sep}{partnerTarget}")
+                add_combo(f"{partnerTarget}{sep}{nameTarget}")
+            if bday in ("Y", "y"):
+                add_combo(partnerTarget + yearTarget)
+                add_combo(nameTarget + partnerTarget + yearTarget)
+
+        if keywordTarget:
+            for base in [keywordTarget, keywordTarget.capitalize(), keywordTarget.upper(), nameTarget + keywordTarget, keywordTarget + nameTarget, leet(keywordTarget), altcaps(keywordTarget)]:
+                add_combo(base)
+                for suffix in common_suffixes:
+                    add_combo(base + suffix)
+            for i in range(range1):
+                add_combo(keywordTarget + str(i))
+                add_combo(nameTarget + keywordTarget + str(i))
+            for sep in separators:
+                add_combo(f"{nameTarget}{sep}{keywordTarget}")
+                add_combo(f"{keywordTarget}{sep}{nameTarget}")
+
+        if cityTarget:
+            for base in [cityTarget, cityTarget.capitalize(), nameTarget + cityTarget, cityTarget + nameTarget, nameTarget.capitalize() + cityTarget.capitalize(), leet(cityTarget)]:
+                add_combo(base)
+                for suffix in common_suffixes:
+                    add_combo(base + suffix)
+            for sep in separators:
+                add_combo(f"{nameTarget}{sep}{cityTarget}")
+
+        if luckyTarget:
+            for base in [nameTarget, lastnameTarget, nameTarget.capitalize(), lastnameTarget.capitalize()]:
+                add_combo(base + luckyTarget)
+                add_combo(luckyTarget + base)
+            if petTarget:
+                add_combo(petTarget + luckyTarget)
+            if partnerTarget:
+                add_combo(partnerTarget + luckyTarget)
+
+        if phoneTarget:
+            add_combo(phoneTarget)
+            add_combo(nameTarget + phoneTarget)
+            add_combo(nameTarget + phoneTarget[-4:])
+            add_combo(nameTarget + phoneTarget[-6:])
+            add_combo(lastnameTarget + phoneTarget[-4:])
+            add_combo(phoneTarget[-4:] + nameTarget)
+            add_combo(phoneTarget[:4] + nameTarget)
+
+        with open("passwords.txt", "w") as f:
+            for combo in sorted(combos):
+                f.write(combo + "\n")
 
         
         print("removing duplicates...")
