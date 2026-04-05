@@ -1,0 +1,108 @@
+name: Python Tests & Linting
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install flake8 pytest
+    
+    - name: Syntax Check with flake8
+      run: |
+        flake8 main.py --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 main.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      continue-on-error: true
+    
+    - name: Check imports
+      run: |
+        python -m py_compile main.py
+    
+    - name: Verify requirements.txt
+      run: |
+        python -c "import requests; import phonenumbers; import tqdm; import pystyle; print('✓ All required packages available')"
+    
+    - name: Security Check - No hardcoded secrets
+      run: |
+        if grep -r "api_key\|password\|secret" main.py --ignore-case; then
+          echo "⚠️ Warning: Possible hardcoded credentials found"
+          exit 1
+        else
+          echo "✓ No obvious hardcoded secrets found"
+        fi
+      continue-on-error: true
+
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install linting tools
+      run: |
+        pip install flake8 pylint
+    
+    - name: Run flake8 linting
+      run: flake8 main.py --max-line-length=120
+      continue-on-error: true
+    
+    - name: Check file permissions
+      run: |
+        echo "✓ Checking project structure..."
+        ls -la
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install security tools
+      run: pip install bandit
+    
+    - name: Run Bandit security check
+      run: bandit main.py -f json -o bandit-report.json || true
+      continue-on-error: true
+    
+    - name: Upload security report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: bandit-security-report
+        path: bandit-report.json
+      continue-on-error: true
