@@ -1,82 +1,92 @@
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/379e5bbd-aa24-45fc-ab65-8526f8b767d5")
-" />
-</p>
+[README.md](https://github.com/user-attachments/files/26489790/README.md)
+# wordsmith - Password Generator & Validation Tool
 
-<h1 align="center">Wordsmith</h1>
-
-<p align="center">
-Synthetic data generator for emails, passwords, and phone numbers.
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/python-3.14.3-blue"/>
-  <img src="https://img.shields.io/badge/status-active-success"/>
-  <img src="https://img.shields.io/badge/license-MIT-green"/>
-</p>
-
----
-
-## 🚀 Overview
-
-Wordsmith is a lightweight Python tool designed to generate **synthetic data** such as:
-
-- Emails  
-- Phone numbers (country-based formats)  
-- Passwords  
-
-It is built for  security professionals and  penetration testers for:
-- Testing input validation systems  
-- Generating dummy credentials for login forms  
-- Simulating user data in controlled environments  
-- Stress testing authentication systems  
-
-⚠️ This tool must only be used in authorized environments and with proper permission.
-
----
+A powerful password wordlist generator with email/phone validation and "Have I Been Pwned?" integration.
 
 ## ⚠️ Disclaimer
 
-This project is strictly for **educational and testing purposes only**.
+**This project is strictly for educational and research purposes only.**
 
-It does NOT:
-- Validate phone numbers or emails
-- Access external databases  
-- Perform scraping or lookup  
+### What This Tool Does NOT Do:
+- ❌ Does NOT attempt unauthorized access to any system
+- ❌ Does NOT perform hacking or illegal activities
+- ❌ Does NOT scrape, crawl, or abuse third-party services
+- ❌ Does NOT store, sell, or misuse personal data
+- ❌ Does NOT validate credentials against live systems
+- ❌ Third-party API responses (like HIBP) may contain stale or inaccurate data
 
-All generated data is **random and fictional**.
+### What This Tool DOES Do:
+- ✅ Generates password combinations based on personal information (for authorized penetration testing)
+- ✅ Validates email format and phone number format locally
+- ✅ Queries the public "Have I Been Pwned?" database (read-only, no authentication bypass)
+- ✅ Helps security researchers understand password patterns
 
----
+### Legal Requirements:
+- You must have **explicit written authorization** before using this tool on any system or data you do not own
+- Using this tool for unauthorized access, hacking, or illegal purposes is a criminal offense
+- The authors are not responsible for misuse, damages, or legal consequences
+- Comply with all local, state, and federal laws
 
-## ✨ Features
+### IMPORTANT:
+This tool is provided "AS IS" without any warranty. Users are solely responsible for ensuring compliance with applicable laws and regulations. Unauthorized access to computer systems is illegal.
 
-- 📧 Random email generator  
-- 📱 Country-based phone number generator (GR / TR)  
-- 🔐 Custom password generator  
-- ⚡ Fast and lightweight  
-- 🖥 CLI interface  
-- 💾 Export-ready output  
+## Features
 
----
-## 🔐 Security & Penetration Testing Use
+### Option 1: Password Generation
+- Generate thousands of password combinations from personal data
+- Uses transformations: leet speak, alternating caps, vowel removal
+- Supports separators and numeric patterns
+- Deduplication for unique passwords only
 
-Wordsmith can be used by security professionals and penetration testers for:
+### Option 2: Email Generation
+- Random email generation with custom domain
+- Keyword-based email prefixes
 
-- Testing input validation systems  
-- Generating dummy credentials for login forms  
-- Simulating user data in controlled environments  
-- Stress testing authentication systems  
+### Option 3: Phone Number Generation
+- Support for Greece (+30) and Turkey (+90)
+- Random generation within valid ranges
 
-⚠️ This tool must only be used in authorized environments and with proper permission.
----
+### Option 4: Validation & HIBP Checking
+**Sub-options:**
+1. **Email Format Validation** — Local regex validation only
+2. **Phone Number Validation** — Uses phonenumbers library
+3. **Single Email HIBP Check** — Check if email was in known breaches
+4. **Batch Email HIBP Checking** — Check multiple emails from file
 
-## 🛠 Installation
+#### Important Notes on HIBP:
+- Queries the public "Have I Been Pwned?" API (with rate limiting)
+- Does NOT attempt to bypass, hack, or login to HIBP
+- Information is publicly available and read-only
+- Respects API TOS with 2-second delays between requests
 
-Clone the repository:
+## Installation
 
 ```bash
-git clone https://github.com/CodebindPyth/wordsmith.git
-cd wordsmith
 pip install -r requirements.txt
-python main.py
+```
 
+## Usage
+
+```bash
+python main.py
+```
+
+Follow the interactive menu to choose your option.
+
+## Requirements
+
+See `requirements.txt`:
+- requests >= 2.31.0
+- phonenumbers >= 8.13.0
+- tqdm >= 4.66.0
+- pystyle >= 2.2.4
+
+## Authors
+- CodebindPyth 
+
+## License
+Educational Use Only - See Disclaimer
+
+---
+
+**Remember:** This tool is for authorized security testing and education only. Always obtain proper authorization before testing any systems you do not own.
