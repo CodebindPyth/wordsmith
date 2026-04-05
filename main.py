@@ -59,6 +59,7 @@ while (option != "4"):
     option = input("                                                                                    give option: ")
 
     if option == "1":
+      #inputs of user for wordlist
         nameTarget = input("give first name of target: ").strip()
         lastnameTarget = input("give last name of target: ").strip()
         passwordLength = int(input("give length of password: "))
@@ -113,7 +114,7 @@ while (option != "4"):
         vowels = set("aeiouAEIOU" "αεηιουωΑΕΗΙΟΥΩ")
         def no_vowels(word):
             return ''.join(c for c in word if c not in vowels)
-
+#custom seperators
         separators   = [".", "_", "-", "!", "@", "#", "$"]
         common_suffixes = ["123","1234","12345","!","!!","123!","1!","@1","321",
                            "111","000","007","69","99","2024","2023","01","1"]
@@ -130,7 +131,7 @@ while (option != "4"):
 
         with open("passwords.txt", "w") as f:
 
-            
+           #combos for wordlist start
             for w in [nameTarget, lastnameTarget,
                       nameTarget+lastnameTarget, lastnameTarget+nameTarget,
                       nameTarget.capitalize(), lastnameTarget.capitalize(),
@@ -424,12 +425,14 @@ while (option != "4"):
         if countryCode == "+30":
             phonenumbers = int(input("give number of phone numbers to generate: "))
             with open("phonenumbers.txt", "w") as f:
+              #generate random numbers from 6970000000 to 6999999999 (GR)
                 for i in range(phonenumbers):
                     number = random.randint(6970000000, 6999999999)
                     f.write(f"{countryCode}{number}\n")
         elif countryCode == "+90":
             phonenumbers = int(input("give number of phone numbers to generate: "))
             with open("phonenumbers.txt", "w") as f:
+              #GENERATE random numbers tr
                 for i in range(phonenumbers):
                     number = random.randint(5300000000, 5539999999)
                     f.write(f"{countryCode}{number}\n")
