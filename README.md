@@ -62,6 +62,7 @@ This tool is provided "AS IS" without any warranty. Users are solely responsible
 ## Installation
 
 ```bash
+cd wordsmith
 pip install -r requirements.txt
 ```
 
