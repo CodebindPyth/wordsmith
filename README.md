@@ -3,23 +3,23 @@
 
 A powerful password wordlist generator with email/phone validation and "Have I Been Pwned?" integration.
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 **This project is strictly for educational and research purposes only.**
 
 ### What This Tool Does NOT Do:
-- ❌ Does NOT attempt unauthorized access to any system
-- ❌ Does NOT perform hacking or illegal activities
-- ❌ Does NOT scrape, crawl, or abuse third-party services
-- ❌ Does NOT store, sell, or misuse personal data
-- ❌ Does NOT validate credentials against live systems
-- ❌ Third-party API responses (like HIBP) may contain stale or inaccurate data
+-  Does NOT attempt unauthorized access to any system
+-  Does NOT perform hacking or illegal activities
+-  Does NOT scrape, crawl, or abuse third-party services
+-  Does NOT store, sell, or misuse personal data
+-  Does NOT validate credentials against live systems
+-  Third-party API responses (like HIBP) may contain stale or inaccurate data
 
 ### What This Tool DOES Do:
-- ✅ Generates password combinations based on personal information (for authorized penetration testing)
-- ✅ Validates email format and phone number format locally
-- ✅ Queries the public "Have I Been Pwned?" database (read-only, no authentication bypass)
-- ✅ Helps security researchers understand password patterns
+- Generates password combinations based on personal information (for authorized penetration testing)
+- Validates email format and phone number format locally
+- Queries the public "Have I Been Pwned?" database (read-only, no authentication bypass)
+- Helps security researchers understand password patterns
 
 ### Legal Requirements:
 - You must have **explicit written authorization** before using this tool on any system or data you do not own
