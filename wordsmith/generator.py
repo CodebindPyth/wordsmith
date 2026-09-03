@@ -1,6 +1,4 @@
-"""
-Password generation module for WordSmith.
-"""
+
 
 import os
 import random
@@ -11,9 +9,6 @@ from .config import SEPARATORS, COMMON_SUFFIXES, KEYBOARD_PATTERNS, SEPARATOR_NU
 from .utils import leet, altcaps, no_vowels, only_consonants, variants, reverse_word, capitalize_word, uppercase_word, lowercase_word
 
 class PasswordGenerator:
-    """
-    Advanced password generator with extensive combination patterns.
-    """
     
     def __init__(self):
         self.combos: Set[str] = set()
